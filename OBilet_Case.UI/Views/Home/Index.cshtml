@@ -1,0 +1,145 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+    @model IEnumerable<BusLocationDTO>
+}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <label for="select2example">Nereden</label>
+            <select class="form-control" id="origin">
+                @foreach (var item in Model)
+                {
+                    <option value="@item.ID">@item.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-12 d-flex align-items-center justify-content-center mt-3">
+            <button class="btn btn-primary" id="swapButton"><i class="fas fa-arrow-up"></i> <i class="fas fa-arrow-down"></i></button>
+        </div>
+        <div class="col-md-12">
+            <label for="select2example">Nereye</label>
+            <select class="form-control" id="destination">
+                @foreach (var item in Model)
+                {
+                    <option value="@item.ID">@item.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label for="datepicker">Tarih</label>
+            <input type="text" class="form-control" id="datepicker">
+        </div>
+        <div class="col-md-6 d-flex align-items-end">
+            <button class="btn btn-primary mr-2" id="todayButton">Bugün</button>
+            <button class="btn btn-secondary" id="tomorrowButton">Yarın</button>
+        </div>
+        <div class="col-md-12 d-flex align-items-center justify-content-center mt-3">
+            <button class="btn btn-primary" id="redirectButton">Bileti Bul</button>
+        </div>
+    </div>
+</div>
+@section Scripts
+    {
+    <script>
+        $(document).ready(function () {
+            $('#origin').select2();
+            $('#destination').select2();
+            $("#datepicker").datepicker({
+                dateFormat: "d MM yy DD",
+                firstDay: 1
+            });
+
+            $("#todayButton").click(function () {
+                var today = new Date();
+                $("#datepicker").datepicker('setDate', today);
+            });
+
+            $("#tomorrowButton").click(function () {
+                var tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                $("#datepicker").datepicker('setDate', tomorrow);
+            });
+
+            $("#swapButton").click(function () {
+                var values1 = $('#origin').val();
+                var values2 = $('#destination').val();
+
+                $('#origin').val(values2).trigger('change');
+                $('#destination').val(values1).trigger('change');
+            });
+
+            loadData();
+
+            $('#origin, #destination, #datepicker').change(function () {
+                saveData();
+            });
+
+       
+        });
+
+        function saveData() {
+            var origin = $('#origin').val();
+            var destination = $('#destination').val();
+            var dateValue = $('#datepicker').val();
+
+            localStorage.setItem('select2origin_values', JSON.stringify(origin));
+            localStorage.setItem('select2destination_values', JSON.stringify(destination));
+            localStorage.setItem('datepicker_value', dateValue);
+        }
+
+        function loadData() {
+            var origin = JSON.parse(localStorage.getItem('select2origin_values'));
+            var destination = JSON.parse(localStorage.getItem('select2destination_values'));
+            var storedDateValue = localStorage.getItem('datepicker_value');
+
+            if (origin) {
+                $('#origin').val(origin).trigger('change');
+            }
+            else
+            {
+                $('#origin').val('349').trigger('change');
+            }
+
+            if (destination) {
+                $('#destination').val(destination).trigger('change');
+            }
+            else 
+            {
+                $('#destination').val('356').trigger('change');
+            }
+
+
+            if (storedDateValue) {
+                $('#datepicker').val(storedDateValue);
+            }
+            else {
+                $('#tomorrowButton').trigger('click');
+            }
+        }
+
+        $("#redirectButton").click(function () {
+            var origin = $('#origin').val();
+            var destination = $('#destination').val();
+            var dateValue = $('#datepicker').val();
+
+            if (origin === destination) {
+                alert("İki seçim de aynı olamaz!");
+                return;
+            }
+
+            var parsedDate = $.datepicker.parseDate("d MM yy DD", dateValue);
+            var formattedDate = $.datepicker.formatDate("yy-mm-dd", parsedDate);
+
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (parsedDate < today) {
+                alert("Seçilen tarih bugünden küçük olamaz!");
+                return;
+            }
+
+            var newPath = `/${origin}/${destination}/${formattedDate}`;
+            window.location.href = newPath;
+        });
+    </script>
+}
